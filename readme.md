@@ -1,1 +1,1 @@
-dd
+This application is made using mern technology. It is used as a meeting room. In order to communicate with someone, he must be in your friends list. For that, it is necessary that you first send a request to the user, and then, if he accepts, you become friends and can start a conversation. Each of the users has their own avatar, which they can change at any time, thus enabling easier recognition. Modern technologies were used, among which I would single out: React, React Redux, Socket.io, Express, Node.
