@@ -3,6 +3,7 @@ import Spinner from "../components/Spinner";
 import AuthContext from "../context/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import Conversation from "../components/Conversation";
 const Home = () => {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
@@ -38,7 +39,7 @@ const Home = () => {
   }, [arrivalMessage, currentChat]);
 
   useEffect(() => {
-    socket.current.emit("addUser", user._id);
+    socket.current.emit("addUser", user.id);
     socket.current.on("getUsers", (users) => {
       setOnlineUsers(
         user.followings.filter((f) => users.some((u) => u.userId === f))
@@ -49,19 +50,19 @@ const Home = () => {
   useEffect(() => {
     const getConversations = async () => {
       try {
-        const res = await axios.get("/conversations/" + user._id);
+        const res = await axios.get("/conversations/" + user.id);
         setConversations(res.data);
       } catch (err) {
         console.log(err);
       }
     };
     getConversations();
-  }, [user._id]);
+  }, [user?.id]);
 
   useEffect(() => {
     const getMessages = async () => {
       try {
-        const res = await axios.get("/messages/" + currentChat?._id);
+        const res = await axios.get("/messages/" + currentChat?.id);
         setMessages(res.data);
       } catch (err) {
         console.log(err);
@@ -73,17 +74,15 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const message = {
-      sender: user._id,
+      sender: user.id,
       text: newMessage,
-      conversationId: currentChat._id,
+      conversationId: currentChat.id,
     };
 
-    const receiverId = currentChat.members.find(
-      (member) => member !== user._id
-    );
+    const receiverId = currentChat.members.find((member) => member !== user.id);
 
     socket.current.emit("sendMessage", {
-      senderId: user._id,
+      senderId: user.id,
       receiverId,
       text: newMessage,
     });
@@ -117,30 +116,7 @@ const Home = () => {
               >
                 <div class="card-body bg-primary  ">
                   <ul class="list-unstyled mb-0 ">
-                    <li class="p-2 border-bottom">
-                      <a
-                        href="#!"
-                        class="d-flex justify-content-between text-decoration-none"
-                      >
-                        <div class="d-flex flex-row">
-                          <img
-                            src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-1.webp"
-                            alt="avatar"
-                            class="rounded-circle d-flex align-self-center me-3 shadow-1-strong"
-                            width="60"
-                          />
-                          <div class="pt-1">
-                            <p class="fw-bold mb-0">Danny Smith</p>
-                            <p class="small text-muted">
-                              Lorem ipsum dolor sit.
-                            </p>
-                          </div>
-                        </div>
-                        <div class="pt-1">
-                          <p class="small text-muted mb-1">5 mins ago</p>
-                        </div>
-                      </a>
-                    </li>
+                    <Conversation />
 
                     <li class="p-2 border-bottom">
                       <a href="#!" class="d-flex justify-content-between">
