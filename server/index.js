@@ -3,9 +3,11 @@ import express from "express";
 import bodyParser from "body-parser";
 import path from "path";
 import cors from "cors";
+import * as io from "socket.io";
 import { connectDB } from "./config/db.js";
 import { userRoute } from "./routes/userRoutes.js";
 import errorHandler from "./middleware/errorMiddleware.js";
+import { messageRoute } from "./routes/messageRoutes.js";
 
 dotenv.config();
 
@@ -29,12 +31,16 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/users", userRoute);
+app.use("/api/message", messageRoute);
 
 export const __dirname = path.resolve();
 console.log(__dirname);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use(errorHandler);
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+
+const server = app.listen(port, () => {
+  console.log(`Express app listening on port ${port}`);
 });
+
+var socketIo = new io.Server(server);
