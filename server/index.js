@@ -8,6 +8,7 @@ import { connectDB } from "./config/db.js";
 import { userRoute } from "./routes/userRoutes.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import { messageRoute } from "./routes/messageRoutes.js";
+import { conversationRoute } from "./routes/conversationRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRoute);
 app.use("/api/message", messageRoute);
+app.use("/api/conversation", conversationRoute);
 
 export const __dirname = path.resolve();
 console.log(__dirname);

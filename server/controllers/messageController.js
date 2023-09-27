@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendConfirmationEmail } from "../config/nodemailer.config.js";
 import { User } from "../models/userModel.js";
-import { FriendRequest } from "../models/friendRequestModel.js";
 import mongoose from "mongoose";
 import { Message } from "../models/messageModel.js";
 
