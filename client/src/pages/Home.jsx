@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../components/Spinner";
 import AuthContext from "../context/auth/AuthContext";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import Conversation from "../components/Conversation";
@@ -8,17 +9,20 @@ const Home = () => {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const socket = useRef();
   const scrollRef = useRef();
   const { user } = useContext(AuthContext);
+
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) {
       navigate(`/login`);
     }
+    setFriends(user?.friends);
   }, [user]);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ const Home = () => {
   }, [arrivalMessage, currentChat]);
 
   useEffect(() => {
-    socket.current.emit("addUser", user.id);
+    socket.current.emit("addUser", user._id);
     socket.current.on("getUsers", (users) => {
       setOnlineUsers(
         user.followings.filter((f) => users.some((u) => u.userId === f))
@@ -50,47 +54,100 @@ const Home = () => {
   useEffect(() => {
     const getConversations = async () => {
       try {
-        const res = await axios.get("/conversations/" + user.id);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const res = await axios.get(
+          "http://localhost:5000/api/conversation/" + user._id,
+          config
+        );
         setConversations(res.data);
       } catch (err) {
         console.log(err);
       }
     };
     getConversations();
-  }, [user?.id]);
+  }, [user?._id]);
 
   useEffect(() => {
     const getMessages = async () => {
       try {
-        const res = await axios.get("/messages/" + currentChat?.id);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const res = await axios.get(
+          "http://localhost:5000/api/message/" + currentChat?._id,
+          config
+        );
         setMessages(res.data);
       } catch (err) {
         console.log(err);
       }
     };
-    getMessages();
+    if (currentChat) {
+      getMessages();
+    }
   }, [currentChat]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const message = {
-      sender: user.id,
+      sender: user._id,
       text: newMessage,
       conversationId: currentChat.id,
     };
 
-    const receiverId = currentChat.members.find((member) => member !== user.id);
+    const receiverId = currentChat.members.find(
+      (member) => member !== user._id
+    );
 
     socket.current.emit("sendMessage", {
-      senderId: user.id,
+      senderId: user._id,
       receiverId,
       text: newMessage,
     });
 
     try {
-      const res = await axios.post("/messages", message);
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const res = await axios.post(
+        "http://localhost:5000/api//messages",
+        message,
+        config
+      );
       setMessages([...messages, res.data]);
       setNewMessage("");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const createConversation = async (e, friendId) => {
+    e.preventDefault();
+
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const res = await axios.post(
+        "http://localhost:5000/api/conversation",
+        {
+          senderId: user._id,
+          receiverId: friendId,
+        },
+        config
+      );
+      setConversations([...conversations, res.data]);
+      return res.data;
     } catch (err) {
       console.log(err);
     }
@@ -116,11 +173,38 @@ const Home = () => {
               >
                 <div class="card-body bg-primary  ">
                   <ul class="list-unstyled mb-0 ">
-                    {conversations.map((c) => (
-                      <div onClick={() => setCurrentChat(c)}>
-                        <Conversation conversation={c} currentUser={user} />
-                      </div>
-                    ))}
+                    {friends.map((friendId) => {
+                      const con = conversations?.find((con) =>
+                        con?.members.includes(friendId)
+                      );
+                      if (!con) {
+                        let c;
+                        return (
+                          <div
+                            onClick={async (e) => {
+                              c = await createConversation(e, friendId);
+                              setCurrentChat(c);
+                            }}
+                          >
+                            <Conversation
+                              conversation={c ? c : {}}
+                              currentUser={user}
+                              friendId={friendId}
+                            />
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div onClick={() => setCurrentChat(con)}>
+                            <Conversation
+                              conversation={con}
+                              currentUser={user}
+                              friendId={friendId}
+                            />
+                          </div>
+                        );
+                      }
+                    })}
                   </ul>
                 </div>
               </div>

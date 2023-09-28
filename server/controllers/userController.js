@@ -151,6 +151,83 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+export const getOtherUser = asyncHandler(async (req, res) => {
+  const otherUserId = new mongoose.Types.ObjectId(req.params.userId);
+  const otherUser = await User.findById(req.params.userId);
+
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("Корисник није пронађен!");
+  }
+
+  if (user) {
+    const friends = await FriendRequest.find({
+      $and: [
+        {
+          $or: [{ recipient: otherUserId._id }, { requester: otherUserId._id }],
+        },
+        {
+          status: 2,
+        },
+      ],
+    });
+    const receivedRequests = await FriendRequest.find({
+      $and: [
+        {
+          recipient: otherUserId._id,
+        },
+        {
+          status: 1,
+        },
+      ],
+    });
+    if (receivedRequests) {
+      var receivedRequestsArray = receivedRequests.map((request) => {
+        return request.requester;
+      });
+    }
+    const sentRequests = await FriendRequest.find({
+      $and: [
+        {
+          requester: otherUserId._id,
+        },
+        {
+          status: 1,
+        },
+      ],
+    });
+    if (sentRequests) {
+      var sentRequestsArray = sentRequests.map((request) => {
+        return request.recipient;
+      });
+    }
+    if (friends) {
+      var friendsArray = friends.map((friend) => {
+        if (friend.requester.toString() === otherUserId.id) {
+          return friend.recipient.toString();
+        } else {
+          return friend.requester.toString();
+        }
+      });
+    }
+    res.status(200).json({
+      _id: otherUser._id,
+      name: otherUser.name,
+      username: otherUser.username,
+      email: otherUser.email,
+      avatarUrl: otherUser?.avatarUrl,
+      friends: friendsArray ? friendsArray : [],
+      receivedRequests: receivedRequestsArray ? receivedRequestsArray : [],
+      sentRequests: sentRequestsArray ? sentRequestsArray : [],
+    });
+  } else {
+    res.status(401);
+    throw new Error("Нешто сте погријешили");
+  }
+});
+
 export const verifyUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     confirmationCode: req.params.confirmationCode,

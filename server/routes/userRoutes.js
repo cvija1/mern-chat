@@ -17,6 +17,7 @@ import {
   acceptFriendRequest,
   getFriends,
   getFriendsRequest,
+  getOtherUser,
 } from "../controllers/userController.js";
 import path from "path";
 
@@ -39,4 +40,5 @@ router.put(
 router.post("/request", protect, sendFriendRequest);
 router.put("/request", protect, acceptFriendRequest);
 router.delete("/request", protect, cancelFriendRequest);
+router.get("/:userId", protect, getOtherUser);
 export { router as userRoute };
