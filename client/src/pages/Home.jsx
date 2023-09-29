@@ -5,6 +5,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import Conversation from "../components/Conversation";
+import Message from "../components/Message";
 const Home = () => {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
@@ -13,6 +14,7 @@ const Home = () => {
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const socket = useRef();
   const scrollRef = useRef();
   const { user } = useContext(AuthContext);
@@ -34,6 +36,10 @@ const Home = () => {
         createdAt: Date.now(),
       });
     });
+
+    return () => {
+      socket.current.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -43,32 +49,37 @@ const Home = () => {
   }, [arrivalMessage, currentChat]);
 
   useEffect(() => {
-    socket.current.emit("addUser", user._id);
-    socket.current.on("getUsers", (users) => {
-      setOnlineUsers(
-        user.followings.filter((f) => users.some((u) => u.userId === f))
-      );
-    });
+    if (user) {
+      socket.current.emit("addUser", user?._id);
+      socket.current.on("getUsers", (users) => {
+        setOnlineUsers(
+          user?.followings?.filter((f) => users.some((u) => u.userId === f))
+        );
+        console.log(users);
+      });
+    }
   }, [user]);
 
   useEffect(() => {
-    const getConversations = async () => {
-      try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
-        const res = await axios.get(
-          "http://localhost:5000/api/conversation/" + user._id,
-          config
-        );
-        setConversations(res.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    getConversations();
+    if (user?._id) {
+      const getConversations = async () => {
+        try {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${user?.token}`,
+            },
+          };
+          const res = await axios.get(
+            "http://localhost:5000/api/conversation/" + user?._id,
+            config
+          );
+          setConversations(res.data);
+        } catch (err) {
+          console.log(err);
+        }
+      };
+      getConversations();
+    }
   }, [user?._id]);
 
   useEffect(() => {
@@ -76,7 +87,7 @@ const Home = () => {
       try {
         const config = {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${user?.token}`,
           },
         };
         const res = await axios.get(
@@ -96,17 +107,17 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const message = {
-      sender: user._id,
+      sender: user?._id,
       text: newMessage,
-      conversationId: currentChat.id,
+      conversationId: currentChat._id,
     };
 
     const receiverId = currentChat.members.find(
-      (member) => member !== user._id
+      (member) => member !== user?._id
     );
 
     socket.current.emit("sendMessage", {
-      senderId: user._id,
+      senderId: user?._id,
       receiverId,
       text: newMessage,
     });
@@ -114,11 +125,11 @@ const Home = () => {
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       };
       const res = await axios.post(
-        "http://localhost:5000/api//messages",
+        "http://localhost:5000/api/message",
         message,
         config
       );
@@ -135,13 +146,13 @@ const Home = () => {
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       };
       const res = await axios.post(
         "http://localhost:5000/api/conversation",
         {
-          senderId: user._id,
+          senderId: user?._id,
           receiverId: friendId,
         },
         config
@@ -159,7 +170,10 @@ const Home = () => {
 
   return (
     <>
-      <section className="bg-dark flex-grow-1">
+      {loading && <Spinner />}
+      <section
+        className={`${loading ? "invisible" : "visible"} bg-dark flex-grow-1`}
+      >
         <div class=" container py-2">
           <div class="row ">
             <div class="col-md-6 col-lg-5 col-xl-4 mb-4 mb-md-0 d-flex flex-column ">
@@ -179,6 +193,7 @@ const Home = () => {
                       );
                       if (!con) {
                         let c;
+
                         return (
                           <div
                             onClick={async (e) => {
@@ -190,16 +205,22 @@ const Home = () => {
                               conversation={c ? c : {}}
                               currentUser={user}
                               friendId={friendId}
+                              setLoading={setLoading}
                             />
                           </div>
                         );
                       } else {
                         return (
-                          <div onClick={() => setCurrentChat(con)}>
+                          <div
+                            onClick={() => {
+                              setCurrentChat(con);
+                            }}
+                          >
                             <Conversation
                               conversation={con}
                               currentUser={user}
                               friendId={friendId}
+                              setLoading={setLoading}
                             />
                           </div>
                         );
@@ -211,119 +232,44 @@ const Home = () => {
             </div>
 
             <div class="col-md-6 col-lg-7 col-xl-8 mt-5 ">
-              <ul
-                class="list-unstyled overflow-auto"
-                style={{ maxHeight: "480px" }}
-              >
-                <li class="d-flex justify-content-between mb-4">
-                  <img
-                    src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp"
-                    alt="avatar"
-                    class="rounded-circle d-flex align-self-start me-3 shadow-1-strong"
-                    width="60"
-                  />
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between p-3">
-                      <p class="fw-bold mb-0">Brad Pitt</p>
-                      <p class="text-muted small mb-0">
-                        <i class="far fa-clock"></i> 12 mins ago
-                      </p>
-                    </div>
-                    <div class="card-body">
-                      <p class="mb-0">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua.
-                      </p>
-                    </div>
+              {currentChat ? (
+                <>
+                  {messages.map((m) => {
+                    return (
+                      <Message
+                        ref={scrollRef}
+                        message={m}
+                        own={m.sender === user?._id}
+                      />
+                    );
+                  })}
+
+                  <div className="bg-white input-group mt-auto rounded-3">
+                    <input
+                      type="text"
+                      id="myInput"
+                      class="form-control py-3 shadow-none "
+                      placeholder="Unesite poruku.."
+                      aria-label="Unesite poruku"
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      value={newMessage}
+                      aria-describedby="button-addon2"
+                    />
+                    <button
+                      onClick={handleSubmit}
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      id="button-addon2"
+                    >
+                      Pošalji
+                    </button>
                   </div>
-                </li>
-                <li class="d-flex justify-content-between mb-4">
-                  <img
-                    src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp"
-                    alt="avatar"
-                    class="rounded-circle d-flex align-self-start me-3 shadow-1-strong"
-                    width="60"
-                  />
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between p-3">
-                      <p class="fw-bold mb-0">Brad Pitt</p>
-                      <p class="text-muted small mb-0">
-                        <i class="far fa-clock"></i> 12 mins ago
-                      </p>
-                    </div>
-                    <div class="card-body">
-                      <p class="mb-0">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua.
-                      </p>
-                    </div>
-                  </div>
-                </li>
-                <li class="d-flex justify-content-between mb-4">
-                  <div class="card w-100">
-                    <div class="card-header d-flex justify-content-between p-3">
-                      <p class="fw-bold mb-0">Lara Croft</p>
-                      <p class="text-muted small mb-0">
-                        <i class="far fa-clock"></i> 13 mins ago
-                      </p>
-                    </div>
-                    <div class="card-body">
-                      <p class="mb-0">
-                        Sed ut perspiciatis unde omnis iste natus error sit
-                        voluptatem accusantium doloremque laudantium.
-                      </p>
-                    </div>
-                  </div>
-                  <img
-                    src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-5.webp"
-                    alt="avatar"
-                    class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong"
-                    width="60"
-                  />
-                </li>
-                <li class="d-flex justify-content-between mb-4">
-                  <img
-                    src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp"
-                    alt="avatar"
-                    class="rounded-circle d-flex align-self-start me-3 shadow-1-strong"
-                    width="60"
-                  />
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between p-3">
-                      <p class="fw-bold mb-0">Brad Pitt</p>
-                      <p class="text-muted small mb-0">
-                        <i class="far fa-clock"></i> 10 mins ago
-                      </p>
-                    </div>
-                    <div class="card-body">
-                      <p class="mb-0">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua.
-                      </p>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-              <div class="bg-white input-group mt-auto rounded-3">
-                <input
-                  type="text"
-                  id="myInput"
-                  class="form-control py-3 shadow-none "
-                  placeholder="Unesite poruku.."
-                  aria-label="Unesite poruku"
-                  aria-describedby="button-addon2"
-                />
-                <button
-                  class="btn btn-outline-secondary"
-                  type="button"
-                  id="button-addon2"
-                >
-                  Pošalji
-                </button>
-              </div>
+                </>
+              ) : (
+                <span className="noConversationText">
+                  Open a conversation to start a chat.
+                </span>
+              )}
             </div>
           </div>
         </div>
