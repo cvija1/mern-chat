@@ -119,11 +119,11 @@ const Profile = () => {
             <div className="d-flex flex-column align-items-center  text-center p-3 pb-5 mb-4">
               <div className="container-image">
                 <div className="outer">
-                  {user.avatarUrl ? (
+                  {user?.avatarUrl ? (
                     <img
                       className="rounded-circle  outer"
                       width="150px"
-                      src={`http://localhost:5000/${user.avatarUrl}`}
+                      src={`http://localhost:5000/${user?.avatarUrl}`}
                     />
                   ) : (
                     <img
@@ -154,15 +154,15 @@ const Profile = () => {
                 </div>
               </div>
               <span className="font-weight-bold">
-                {userProfile ? userProfile.username : ""}
+                {userProfile ? userProfile?.username : ""}
               </span>
               <span className="text-white">
-                {userProfile ? userProfile.email : ""}
+                {userProfile ? userProfile?.email : ""}
               </span>
               <span> </span>
               <Link
                 className="text-decoration-none my-4"
-                to={`/${user._id}/friends`}
+                to={`/${user?._id}/friends`}
               >
                 <div className="px-2 rounded py-2  border border-dark bg-primary ">
                   <p className="small text-white text-center mb-1">

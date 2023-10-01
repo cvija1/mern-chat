@@ -79,7 +79,7 @@ socketIo.on("connection", (socket) => {
   //send and get message
   socket.on("sendMessage", ({ senderId, receiverId, text }) => {
     const user = getUser(receiverId);
-    socketIo.to(user.socketId).emit("getMessage", {
+    socketIo.to(user?.socketId).emit("getMessage", {
       senderId,
       text,
     });

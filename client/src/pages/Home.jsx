@@ -8,13 +8,16 @@ import Conversation from "../components/Conversation";
 import Message from "../components/Message";
 const Home = () => {
   const [conversations, setConversations] = useState([]);
+
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [friends, setFriends] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [clicked, setClicked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
   const socket = useRef();
   const scrollRef = useRef();
   const { user } = useContext(AuthContext);
@@ -165,7 +168,17 @@ const Home = () => {
   };
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (currentChat) {
+      setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 2400);
+    }
+  }, [currentChat]);
+
+  useEffect(() => {
+    if (messages) {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   }, [messages]);
 
   return (
@@ -181,10 +194,7 @@ const Home = () => {
                 Prijatelji
               </h5>
 
-              <div
-                class="card flex-grow-1 overflow-auto"
-                style={{ maxHeight: "565px" }}
-              >
+              <div class="card  overflow-auto" style={{ maxHeight: "565px" }}>
                 <div class="card-body bg-primary  ">
                   <ul class="list-unstyled mb-0 ">
                     {friends.map((friendId) => {
@@ -197,8 +207,11 @@ const Home = () => {
                         return (
                           <div
                             onClick={async (e) => {
-                              c = await createConversation(e, friendId);
-                              setCurrentChat(c);
+                              if (currentChat != c) {
+                                c = await createConversation(e, friendId);
+                                setCurrentChat(c);
+                                setLoadingMessages(true);
+                              }
                             }}
                           >
                             <Conversation
@@ -213,7 +226,10 @@ const Home = () => {
                         return (
                           <div
                             onClick={() => {
-                              setCurrentChat(con);
+                              if (con != currentChat) {
+                                setCurrentChat(con);
+                                setLoadingMessages(true);
+                              }
                             }}
                           >
                             <Conversation
@@ -232,38 +248,88 @@ const Home = () => {
             </div>
 
             <div class="col-md-6 col-lg-7 col-xl-8 mt-5 ">
-              {currentChat ? (
+              {currentChat && messages?.length > 0 ? (
                 <>
-                  {messages.map((m) => {
-                    return (
-                      <Message
-                        ref={scrollRef}
-                        message={m}
-                        own={m.sender === user?._id}
-                      />
-                    );
-                  })}
+                  {loadingMessages && <Spinner />}
+                  <ul
+                    className={`${
+                      loadingMessages ? "invisible" : "visible"
+                    } list-unstyled overflow-auto`}
+                    style={{ maxHeight: "480px" }}
+                  >
+                    {messages.map((m) => {
+                      return (
+                        <div ref={scrollRef}>
+                          <Message
+                            loadingMessages={loadingMessages}
+                            currentUser={user}
+                            message={m}
+                            own={m.sender === user?._id}
+                            setLoadingMessages={setLoadingMessages}
+                            currentChat={currentChat}
+                          />
+                        </div>
+                      );
+                    })}
+                  </ul>
 
-                  <div className="bg-white input-group mt-auto rounded-3">
-                    <input
-                      type="text"
-                      id="myInput"
-                      class="form-control py-3 shadow-none "
-                      placeholder="Unesite poruku.."
-                      aria-label="Unesite poruku"
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      value={newMessage}
-                      aria-describedby="button-addon2"
+                  {!loadingMessages && (
+                    <div className="bg-white input-group mt-auto rounded-3">
+                      <input
+                        type="text"
+                        id="myInput"
+                        class="form-control py-3 shadow-none "
+                        placeholder="Unesite poruku.."
+                        aria-label="Unesite poruku"
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        value={newMessage}
+                        aria-describedby="button-addon2"
+                      />
+                      <button
+                        onClick={handleSubmit}
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        id="button-addon2"
+                      >
+                        Pošalji
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : currentChat && messages?.length === 0 ? (
+                <>
+                  {loadingMessages && <Spinner />}
+                  <div
+                    className={`${loadingMessages ? "invisible" : "visible"} `}
+                  >
+                    <Message
+                      loadingMessages={loadingMessages}
+                      setLoadingMessages={setLoadingMessages}
+                      currentChat={currentChat}
                     />
-                    <button
-                      onClick={handleSubmit}
-                      class="btn btn-outline-secondary"
-                      type="button"
-                      id="button-addon2"
-                    >
-                      Pošalji
-                    </button>
                   </div>
+                  {!loadingMessages && (
+                    <div className="bg-white input-group mt-auto rounded-3">
+                      <input
+                        type="text"
+                        id="myInput"
+                        class="form-control py-3 shadow-none "
+                        placeholder="Unesite poruku.."
+                        aria-label="Unesite poruku"
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        value={newMessage}
+                        aria-describedby="button-addon2"
+                      />
+                      <button
+                        onClick={handleSubmit}
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        id="button-addon2"
+                      >
+                        Pošalji
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <span className="noConversationText">
