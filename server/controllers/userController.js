@@ -294,14 +294,27 @@ export const getUsers = asyncHandler(async (req, res) => {
     .skip((page - 1) * pageSize)
     .limit(pageSize);
 
-  const responseUsers = users.map((user) => {
-    return {
-      _id: user._id,
-      email: user.email,
-      username: user.username,
-      avatarUrl: user.avatarUrl,
-    };
-  });
+  const responseUsers = await Promise.all(
+    users.map(async (user) => {
+      var friends = await FriendRequest.find({
+        $and: [
+          {
+            $or: [{ recipient: user._id }, { requester: user._id }],
+          },
+          {
+            status: 2,
+          },
+        ],
+      });
+      return {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        friends,
+      };
+    })
+  );
 
   res.status(200).json({
     responseUsers,

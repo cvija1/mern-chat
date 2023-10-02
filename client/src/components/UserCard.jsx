@@ -42,7 +42,9 @@ const UserCard = ({ userInfo }) => {
                   <p className="small text-muted text-center mb-1">
                     Broj prijatelja
                   </p>
-                  <p className="mb-0 text-center">976</p>
+                  <p className="mb-0 text-center">
+                    {userInfo?.friends?.length}
+                  </p>
                 </div>
               </div>
               <div className="d-flex pt-1">
