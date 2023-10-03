@@ -27,14 +27,17 @@ app.use(
 
 const port = process.env.PORT || 3030;
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "development") {
   app.use(express.static("../client/dist"));
   app.get("*", (req, res) => {
     let filePath = path.resolve(__dirname, "../client/dist", "index.html");
     res.sendFile(filePath);
   });
+} else {
+  app.get("/", (req, res) => {
+    res.send("Hello");
+  });
 }
-
 app.use("/api/users", userRoute);
 app.use("/api/message", messageRoute);
 app.use("/api/conversation", conversationRoute);
