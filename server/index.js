@@ -29,7 +29,7 @@ const port = process.env.PORT || 3030;
 
 if (process.env.NODE_ENV === "development") {
   app.use(express.static("../client/dist"));
-  app.get("*", (req, res) => {
+  app.get("/", (req, res) => {
     let filePath = path.resolve(__dirname, "../client/dist", "index.html");
     res.sendFile(filePath);
   });
