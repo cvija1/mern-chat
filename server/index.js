@@ -54,7 +54,7 @@ const server = app.listen(port, () => {
 
 var socketIo = new io.Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
+    origin: ["https://mern-chat-egjq.onrender.com"],
   },
 });
 
