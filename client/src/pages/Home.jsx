@@ -31,7 +31,9 @@ const Home = () => {
   }, [user]);
 
   useEffect(() => {
-    socket.current = io("ws://localhost:5000", { transports: ["websocket"] });
+    socket.current = io("https://mern-chat-egjq.onrender.com", {
+      transports: ["websocket"],
+    });
     socket.current.on("getMessage", (data) => {
       setArrivalMessage({
         sender: data.senderId,
