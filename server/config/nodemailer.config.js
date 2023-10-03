@@ -28,7 +28,7 @@ export const sendConfirmationEmail = (name, email, confirmationCode) => {
           <h2>Ћао ${name}</h2>
           <p>Хвала што користите апликацију. Молимо Вас потврдите свој имејл кликом на следећи линк</p>
      
-          <a href=http://localhost:3000/confirm/${confirmationCode}> Кликните овдје</a>
+          <a href=https://mern-chat-egjq.onrender.com/confirm/${confirmationCode}> Кликните овдје</a>
           </div>`,
     })
     .catch((err) => console.log(err));

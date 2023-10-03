@@ -19,7 +19,7 @@ const UserCard = ({ userInfo }) => {
               <img
                 src={
                   userInfo.avatarUrl
-                    ? `http://localhost:5000/${userInfo.avatarUrl}`
+                    ? `https://mern-chat-egjq.onrender.com/${userInfo.avatarUrl}`
                     : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"
                 }
                 alt="Generic placeholder image"

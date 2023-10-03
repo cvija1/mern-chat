@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = "http://localhost:5000/api/users/";
+const API_URL = "https://mern-chat-egjq.onrender.com/api/users/";
 export const getUsers = async (params) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = user.token;

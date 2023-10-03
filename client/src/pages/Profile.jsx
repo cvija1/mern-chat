@@ -123,7 +123,7 @@ const Profile = () => {
                     <img
                       className="rounded-circle  outer"
                       width="150px"
-                      src={`http://localhost:5000/${user?.avatarUrl}`}
+                      src={`https://mern-chat-egjq.onrender.com/${user?.avatarUrl}`}
                     />
                   ) : (
                     <img

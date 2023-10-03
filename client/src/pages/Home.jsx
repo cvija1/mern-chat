@@ -73,7 +73,7 @@ const Home = () => {
             },
           };
           const res = await axios.get(
-            "http://localhost:5000/api/conversation/" + user?._id,
+            "https://mern-chat-egjq.onrender.com/api/conversation/" + user?._id,
             config
           );
           setConversations(res.data);
@@ -94,7 +94,7 @@ const Home = () => {
           },
         };
         const res = await axios.get(
-          "http://localhost:5000/api/message/" + currentChat?._id,
+          "https://mern-chat-egjq.onrender.com/api/message/" + currentChat?._id,
           config
         );
         setMessages(res.data);
@@ -132,7 +132,7 @@ const Home = () => {
         },
       };
       const res = await axios.post(
-        "http://localhost:5000/api/message",
+        "https://mern-chat-egjq.onrender.com/api/message",
         message,
         config
       );
@@ -153,7 +153,7 @@ const Home = () => {
         },
       };
       const res = await axios.post(
-        "http://localhost:5000/api/conversation",
+        "https://mern-chat-egjq.onrender.com/api/conversation",
         {
           senderId: user?._id,
           receiverId: friendId,

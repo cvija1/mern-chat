@@ -24,7 +24,7 @@ const Message = ({
           },
         };
         const res = await axios(
-          "http://localhost:5000/api/users/" + message?.sender,
+          "https://mern-chat-egjq.onrender.com/api/users/" + message?.sender,
           config
         );
 
@@ -59,7 +59,7 @@ const Message = ({
             <img
               src={
                 user?.avatarUrl
-                  ? `http://localhost:5000/${user?.avatarUrl}`
+                  ? `https://mern-chat-egjq.onrender.com/${user?.avatarUrl}`
                   : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"
               }
               alt="avatar"
@@ -95,7 +95,7 @@ const Message = ({
           <img
             src={
               user?.avatarUrl
-                ? `http://localhost:5000/${user?.avatarUrl}`
+                ? `https://mern-chat-egjq.onrender.com/${user?.avatarUrl}`
                 : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"
             }
             alt="avatar"
